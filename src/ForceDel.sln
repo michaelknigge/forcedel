@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceDel", "ForceDel.csproj", "{9FC3D7A8-38DF-4357-A18E-82FF7F5A74D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9FC3D7A8-38DF-4357-A18E-82FF7F5A74D8}.Debug|x86.ActiveCfg = Release|x86
+		{9FC3D7A8-38DF-4357-A18E-82FF7F5A74D8}.Release|x86.ActiveCfg = Release|x86
+		{9FC3D7A8-38DF-4357-A18E-82FF7F5A74D8}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
