@@ -28,43 +28,38 @@ namespace MK.Tools.ForceDel
         /// Löscht die Datei mit dem übergebenen Namen.
         /// </summary>
         /// <param name="fileName">Datei die gelöscht werden soll.</param>
-        /// <param name="verbose">Gibt Informationen über due durchgeführten Aktionen aus.</param>
-        /// <param name="quiet">Unterdrückt alle Ausgaben mit Ausnahme von Fehlermeldungen.</param>
         /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
-        public bool Delete(string fileName, bool verbose, bool quiet)
+        public bool Delete(string fileName)
         {
             try
             {
                 string absoluteFileName = Path.GetFullPath(fileName);
 
-                this.RemoveReadOnlyAttribute(absoluteFileName, verbose);
-                this.DeleteTheFile(absoluteFileName, verbose);
+                this.RemoveReadOnlyAttribute(absoluteFileName);
+                this.DeleteTheFile(absoluteFileName);
 
-                if (!quiet)
-                    Console.Out.WriteLine("Deleted " + absoluteFileName);
-
+                Logger.Log(LogLevel.Normal, "Deleted " + absoluteFileName);
                 return true;
             }
             catch (ArgumentException ex)
             {
-                Console.Out.WriteLine(ex.Message);
+                Logger.Log(LogLevel.Exception, ex.Message);
             }
             catch (IOException ex)
             {
-                Console.Out.WriteLine(ex.Message);
+                Logger.Log(LogLevel.Exception, ex.Message);
             }
             catch (NotSupportedException ex)
             {
-                Console.Out.WriteLine(ex.Message);
+                Logger.Log(LogLevel.Exception, ex.Message);
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.Out.WriteLine(ex.Message);
+                Logger.Log(LogLevel.Exception, ex.Message);
             }
             finally
             {
-                if (verbose)
-                    Console.Out.WriteLine();
+                Logger.Log(LogLevel.Verbose, string.Empty);
             }
 
             return false;
@@ -74,16 +69,15 @@ namespace MK.Tools.ForceDel
         /// Entfernt das ReadOnly-Attribut der Datei, sofern es vorhanden ist.
         /// </summary>
         /// <param name="absoluteFileName">Absoluter Dateiname der Datei</param>
-        /// <param name="verbose">Gibt Informationen über due durchgeführten Aktionen aus.</param>
         /// <returns>true gdw. das Attribut entfernt worden ist (oder es nicht vorhanden war).</returns>
-        private bool RemoveReadOnlyAttribute(string absoluteFileName, bool verbose)
+        private bool RemoveReadOnlyAttribute(string absoluteFileName)
         {
             FileAttributes attr = File.GetAttributes(absoluteFileName);
 
             if ((attr & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)
                 return true;
 
-            Console.Out.WriteLine("Removing read-only attribute from file " + absoluteFileName);
+            Logger.Log(LogLevel.Verbose, "Removing read-only attribute from file " + absoluteFileName);
             File.SetAttributes(absoluteFileName, attr & ~FileAttributes.ReadOnly);
             return true;
         }
@@ -92,21 +86,19 @@ namespace MK.Tools.ForceDel
         /// Versucht die Datei auf "normalem Wege" (mit Standardmitteln) zu löschen.
         /// </summary>
         /// <param name="absoluteFileName">Absoluter Dateiname der zu löschenden Datei</param>
-        /// <param name="verbose">Gibt Informationen über due durchgeführten Aktionen aus.</param>
         /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
-        private bool DeleteTheFile(string absoluteFileName, bool verbose)
+        private bool DeleteTheFile(string absoluteFileName)
         {
             try
             {
-                if (verbose)
-                    Console.Out.WriteLine("Trying to delete file " + absoluteFileName);
+                Logger.Log(LogLevel.Verbose, "Trying to delete file " + absoluteFileName);
 
                 File.Delete(absoluteFileName);
                 return true;
             }
             catch (IOException)
             {
-                return this.TryHarderDelete(absoluteFileName, verbose);
+                return this.TryHarderDelete(absoluteFileName);
             }
         }
 
@@ -117,22 +109,21 @@ namespace MK.Tools.ForceDel
         /// zu löschen.
         /// </summary>
         /// <param name="absoluteFileName">Absoluter Dateiname der zu löschenden Datei</param>
-        /// <param name="verbose">Gibt Informationen über due durchgeführten Aktionen aus.</param>
         /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
-        private bool TryHarderDelete(string absoluteFileName, bool verbose)
+        private bool TryHarderDelete(string absoluteFileName)
         {
             List<int> processIds = UsedFileDetector.GetProcesses(absoluteFileName);
             foreach (int pid in processIds)
             {
                 foreach (IntPtr handle in this.snapshot.GetHandles(pid))
                 {
+                    Logger.Log(LogLevel.Debug, string.Empty);
+
                     string fileName = LowLevelHandleHelper.GetFileNameFromHandle(handle, pid);
                     if (absoluteFileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (verbose)
-                            Console.Out.WriteLine("File " + absoluteFileName + " is in use by process with PID " + pid);
-
-                        this.CloseHandleInRemoteProcess(pid, handle, verbose);
+                        Logger.Log(LogLevel.Verbose, "File " + absoluteFileName + " is in use by process with PID " + pid);
+                        this.CloseHandleInRemoteProcess(pid, handle);
                         break;
                     }
                 }
@@ -148,20 +139,27 @@ namespace MK.Tools.ForceDel
         /// </summary>
         /// <param name="processId">ID des Prozesses.</param>
         /// <param name="handle">Zu schließendes Dateihandle.</param>
-        /// <param name="verbose">Gibt Informationen über due durchgeführten Aktionen aus.</param>
-        private void CloseHandleInRemoteProcess(int processId, IntPtr handle, bool verbose)
+        private void CloseHandleInRemoteProcess(int processId, IntPtr handle)
         {
-            SafeProcessHandle remoteProcess = NativeMethods.OpenProcess(ProcessAccessRights.ProcessDuplicateHandle, true, processId);
+            SafeNativeHandle remoteProcess = NativeMethods.OpenProcess(ProcessAccessRights.ProcessDuplicateHandle, true, processId);
+            if (remoteProcess.IsInvalid)
+            {
+                Logger.Log(LogLevel.Verbose, "Process with PID=" + processId + " could not be opened.");
+                return;
+            }
+
             IntPtr remoteProcessHandle = remoteProcess.DangerousGetHandle();
             IntPtr currentProcessHandle = NativeMethods.GetCurrentProcess();
-            SafeObjectHandle duplicatedHandle = null;
+            SafeNativeHandle duplicatedHandle = null;
 
             if (NativeMethods.DuplicateHandle(remoteProcessHandle, handle, currentProcessHandle, out duplicatedHandle, 0, false, DuplicateHandleOptions.CloseSource))
             {
-                if (verbose)
-                    Console.Out.WriteLine("File closed in process with PID " + processId);
-
+                Logger.Log(LogLevel.Verbose, "File closed in process with PID " + processId);
                 NativeMethods.CloseHandle(duplicatedHandle.DangerousGetHandle());
+            }
+            else
+            {
+                Logger.Log(LogLevel.Verbose, "File could not be closed in process with PID " + processId);
             }
 
             NativeMethods.CloseHandle(remoteProcessHandle);

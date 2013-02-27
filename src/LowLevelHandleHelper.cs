@@ -22,7 +22,10 @@ namespace MK.Tools.ForceDel
         /// <returns>true gdw. das Objekt eine Datei beschreibt.</returns>
         public static bool IsFileHandle(IntPtr handle, int processId)
         {
-            return GetHandleTypeToken(handle, processId).Equals("File");
+            string type = LowLevelHandleHelper.GetHandleTypeToken(handle, processId);
+
+            Logger.Log(LogLevel.Debug, "Getting filetype: PID=" + processId + " handle=" + handle.ToInt32() + ", type=" + type);
+            return type.Equals("File");
         }
 
         /// <summary>
@@ -34,13 +37,19 @@ namespace MK.Tools.ForceDel
         /// <returns>Name des Handles (z. B. Dateiname). Wenn der Name nicht festgestellt werden kann wird ein leerer String geliefert.</returns>
         public static string GetFileNameFromHandle(IntPtr handle, int processId)
         {
+            Logger.Log(LogLevel.Debug, "Getting filename: PID=" + processId + " handle=" + handle.ToInt32());
+
             string devicePath;
             if (!LowLevelHandleHelper.GetFileNameFromHandle(handle, processId, out devicePath))
                 return string.Empty;
-
+            else
+                Logger.Log(LogLevel.Debug, " -> device path is " + devicePath);
+            
             string dosPath = PathHelper.ConvertDevicePathToDosPath(devicePath);
             if (dosPath.Length == 0)
                 return devicePath;
+            else
+                Logger.Log(LogLevel.Debug, " -> dos path is " + dosPath);
 
             return dosPath;
         }
@@ -55,8 +64,8 @@ namespace MK.Tools.ForceDel
         {
             IntPtr currentProcess = NativeMethods.GetCurrentProcess();
             bool remote = processId != NativeMethods.GetProcessId(currentProcess);
-            SafeProcessHandle processHandle = null;
-            SafeObjectHandle objectHandle = null;
+            SafeNativeHandle processHandle = null;
+            SafeNativeHandle objectHandle = null;
 
             try
             {
@@ -89,6 +98,7 @@ namespace MK.Tools.ForceDel
         /// <returns>Typ des Handles als String, z. B. "File".</returns>
         private static string GetHandleTypeToken(IntPtr handle)
         {
+            Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#1, ObjectTypeInformation) for handle " + handle.ToString());
             int length;
             NtStatus ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, IntPtr.Zero, 0, out length);
             if (ret == NtStatus.STATUS_INVALID_HANDLE)
@@ -107,6 +117,7 @@ namespace MK.Tools.ForceDel
                     ptr = Marshal.AllocHGlobal(length);
                 }
 
+                Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#2, ObjectTypeInformation) for handle " + handle.ToString());
                 if (NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, ptr, length, out length) == NtStatus.STATUS_SUCCESS)
                     return Marshal.PtrToStringUni((IntPtr)((int)ptr + 0x60));
             }
@@ -129,8 +140,9 @@ namespace MK.Tools.ForceDel
         {
             IntPtr currentProcess = NativeMethods.GetCurrentProcess();
             bool remote = processId != NativeMethods.GetProcessId(currentProcess);
-            SafeProcessHandle processHandle = null;
-            SafeObjectHandle objectHandle = null;
+            SafeNativeHandle processHandle = null;
+            SafeNativeHandle objectHandle = null;
+
             try
             {
                 if (remote)
@@ -168,10 +180,12 @@ namespace MK.Tools.ForceDel
             FileNameFromHandleState f = new FileNameFromHandleState(handle);
             try
             {
+                Logger.Log(LogLevel.Debug, "Queue request, state " + f.ToString());
                 ThreadPool.QueueUserWorkItem(new WaitCallback(GetFileNameFromHandle), f);
                 if (f.WaitOne(wait))
                 {
                     fileName = f.FileName;
+                    Logger.Log(LogLevel.Debug, "Request " + f.ToString() + " returnded file name " + fileName);
                     return f.RetValue;
                 }
                 else
@@ -199,7 +213,7 @@ namespace MK.Tools.ForceDel
 
             if (retValue)
             {
-                s.RetValue = GetFileNameFromHandle(s.Handle, out fileName);
+                s.RetValue = retValue;
                 s.FileName = fileName;
                 s.Set();
             }
@@ -227,6 +241,7 @@ namespace MK.Tools.ForceDel
                     ptr = Marshal.AllocHGlobal(length);
                 }
 
+                Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#1, ObjectNameInformation) for handle " + handle.ToString());
                 NtStatus ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectNameInformation, ptr, length, out length);
                 if (ret == NtStatus.STATUS_BUFFER_OVERFLOW)
                 {
@@ -240,6 +255,7 @@ namespace MK.Tools.ForceDel
                         ptr = Marshal.AllocHGlobal(length);
                     }
 
+                    Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#2, ObjectNameInformation) for handle " + handle.ToString());
                     ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectNameInformation, ptr, length, out length);
                 }
 

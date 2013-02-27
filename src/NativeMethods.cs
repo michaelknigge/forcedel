@@ -174,6 +174,15 @@ namespace MK.Tools.ForceDel
         /// Funktion unbekannt.
         /// </summary>
         public int AccessMask;
+
+        /// <summary>
+        /// Generates a string containing all attributes of the SystemHandleEntry.
+        /// </summary>
+        /// <returns></returns>
+//        public override string ToString()
+//        {
+//            return "OwnerPid=" + this.OwnerPid + ", ObjectType=" + this.ObjectType + ", HandleFlags=" + this.HandleFlags + ", HandleValue=" + this.HandleValue + ", AccessMask=" + this.AccessMask;
+//        }
     }
 
     /// <summary>
@@ -259,7 +268,7 @@ namespace MK.Tools.ForceDel
             [Out] out int ReturnLength);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern SafeProcessHandle OpenProcess(
+        internal static extern SafeNativeHandle OpenProcess(
             [In] ProcessAccessRights dwDesiredAccess,
             [In, MarshalAs(UnmanagedType.Bool)] bool bInheritHandle,
             [In] int dwProcessId);
@@ -270,7 +279,7 @@ namespace MK.Tools.ForceDel
             [In] IntPtr hSourceProcessHandle,
             [In] IntPtr hSourceHandle,
             [In] IntPtr hTargetProcessHandle,
-            [Out] out SafeObjectHandle lpTargetHandle,
+            [Out] out SafeNativeHandle lpTargetHandle,
             [In] int dwDesiredAccess,
             [In, MarshalAs(UnmanagedType.Bool)] bool bInheritHandle,
             [In] DuplicateHandleOptions dwOptions);

@@ -45,6 +45,7 @@ namespace MK.Tools.ForceDel
 
             bool verbose = false;
             bool quiet = false;
+            bool debug = false;
 
             foreach (string option in args)
             {
@@ -52,24 +53,30 @@ namespace MK.Tools.ForceDel
                     quiet = true;
                 else if (option.Equals("/V", StringComparison.OrdinalIgnoreCase))
                     verbose = true;
+                else if (option.Equals("/D", StringComparison.OrdinalIgnoreCase))
+                    debug = true;
             }
 
-            if (verbose && quiet)
+            if ((verbose || debug) && quiet)
             {
                 ShowVersionInformation(); 
                 
-                Console.Out.WriteLine("The options /Q and /V are mutually exclusive.");
+                Console.Out.WriteLine("The option /Q can not be specified with /V or /D.");
                 System.Environment.Exit(1);
             }
 
-            if (!quiet || verbose)
+            if (!quiet || verbose || debug)
                 ShowVersionInformation();
+
+            Logger.Debug = debug;
+            Logger.Quiet = quiet;
+            Logger.Verbose = verbose;
 
             int returnCode = 0;
             foreach (string fileName in args)
             {
                 if (!(fileName.Length == 2 && fileName.StartsWith("/", StringComparison.Ordinal)))
-                    if (!deleter.Delete(fileName, verbose, quiet))
+                    if (!deleter.Delete(fileName))
                         returnCode = 1;
             }
 
@@ -88,6 +95,7 @@ namespace MK.Tools.ForceDel
             Console.Out.WriteLine();
             Console.Out.WriteLine("  /Q   Will suppress any output with the exception of error messages.");
             Console.Out.WriteLine("  /V   Prints information about the activities of FORCEDEL.");
+            Console.Out.WriteLine("  /D   Prints debug messages for problem determination.");
             Console.Out.WriteLine();
             Console.Out.WriteLine("Of course /Q and /V are mutually exclusive.");
             Console.Out.WriteLine();
