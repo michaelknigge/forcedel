@@ -42,6 +42,7 @@ namespace MK.Tools.ForceDel
                     }
 
                     int returnLength;
+                    Logger.Log(LogLevel.Debug, "Calling NtQueryObject(SystemHandleInformation)) width a buffersize of " + length);
                     ret = NativeMethods.NtQuerySystemInformation(SystemInformationClass.SystemHandleInformation, ptr, length, out returnLength);
 
                     // Wenn wir mehr Speicher brauchen, runden wir auf zur nächsten 64 KB Grenze...
@@ -57,9 +58,11 @@ namespace MK.Tools.ForceDel
                         int offset = IntPtr.Size;
                         int size = Marshal.SizeOf(typeof(SystemHandleEntry));
 
+                        Logger.Log(LogLevel.Debug, "Enumerating " + handleCount + " handles");
                         for (int i = 0; i < handleCount; i++)
                         {
                             SystemHandleEntry handleEntry = (SystemHandleEntry)Marshal.PtrToStructure((IntPtr)((int)ptr + offset), typeof(SystemHandleEntry));
+                            Logger.Log(LogLevel.Debug, "Handle #" + i + ": " + handleEntry.ToString());
                             yield return handleEntry;
 
                             offset += size;
@@ -81,81 +84,6 @@ namespace MK.Tools.ForceDel
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
-        }
-
-        /// <summary>
-        /// Liefert den Typen (als String) des Handles
-        /// </summary>
-        /// <param name="handle">Handle des Objektes</param>
-        /// <param name="processId">Dazugehöriger Prozess</param>
-        /// <returns>Typ des Handles als String, z. B. "File".</returns>
-        private static string GetHandleTypeToken(IntPtr handle, int processId)
-        {
-            IntPtr currentProcess = NativeMethods.GetCurrentProcess();
-            bool remote = processId != NativeMethods.GetProcessId(currentProcess);
-            SafeProcessHandle processHandle = null;
-            SafeObjectHandle objectHandle = null;
-
-            try
-            {
-                if (remote)
-                {
-                    processHandle = NativeMethods.OpenProcess(ProcessAccessRights.ProcessDuplicateHandle, true, processId);
-                    if (NativeMethods.DuplicateHandle(processHandle.DangerousGetHandle(), handle, currentProcess, out objectHandle, 0, false, DuplicateHandleOptions.SameAccess))
-                        handle = objectHandle.DangerousGetHandle();
-                }
-
-                return GetHandleTypeToken(handle);
-            }
-            finally
-            {
-                if (remote)
-                {
-                    if (processHandle != null)
-                        processHandle.Close();
-
-                    if (objectHandle != null)
-                        objectHandle.Close();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Liefert den Typen (als String) des Handles (im aktuellen Prozess).
-        /// </summary>
-        /// <param name="handle">Handle des Objektes</param>
-        /// <returns>Typ des Handles als String, z. B. "File".</returns>
-        private static string GetHandleTypeToken(IntPtr handle)
-        {
-            int length;
-            NtStatus ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, IntPtr.Zero, 0, out length);
-            if (ret == NtStatus.STATUS_INVALID_HANDLE)
-                return string.Empty;
-
-            IntPtr ptr = IntPtr.Zero;
-            RuntimeHelpers.PrepareConstrainedRegions();
-            try
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                }
-                finally
-                {
-                    ptr = Marshal.AllocHGlobal(length);
-                }
-
-                if (NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, ptr, length, out length) == NtStatus.STATUS_SUCCESS)
-                {
-                    return Marshal.PtrToStringUni((IntPtr)((int)ptr + 0x60));
-                }
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
-
-            return string.Empty;
         }
     }
 }

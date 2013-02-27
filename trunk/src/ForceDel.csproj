@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileDeleter.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="LowLevelHandleHelper.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="OpenFilesEnumerator.cs" />
@@ -64,8 +65,7 @@
     <Compile Include="ProcessHandleSnapshot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SafeObjectHandle.cs" />
-    <Compile Include="SafeProcessHandle.cs" />
+    <Compile Include="SaveNativeHandle.cs" />
     <Compile Include="UsedFileDetector.cs" />
   </ItemGroup>
   <ItemGroup>
