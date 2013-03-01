@@ -6,38 +6,38 @@ namespace MK.Tools.ForceDel
     using System.Threading;
 
     /// <summary>
-    /// Statische Hilfsklasse, die den Umgang mit DOS- und Gerätenamen vereinfacht.
+    /// Static helper class containing methods for handling DOS- and device names.
     /// </summary>
     internal static class PathHelper
     {
         /// <summary>
-        /// Maximale Länge von Pfadangaben unter Windows.
+        /// The maximum character length of a path.
         /// </summary>
         private const int MaxPathLength = 260;
 
         /// <summary>
-        /// Der Präfix von Netzwerkverbindungen.
+        /// Prefix of network handles (handles to shares on a remote computer).
         /// </summary>
         private const string NetworkDevicePrefix = "\\Device\\LanmanRedirector\\";
 
         /// <summary>
-        /// Hilfsobjekt zum Synchronisieren von Zugriffen auf die DeviceMap.
+        /// Helper object for synchronizing access to the deviceMap.
         /// </summary>
         private static object syncObject = new object();
 
         /// <summary>
-        /// Map mit Zuordnungen von NT Gerätenamen zu DOS Gerätenamen.
+        /// Dictionary with mappings of NT device names to DOS device names.
         /// </summary>
         private static Dictionary<string, string> deviceMap;
 
         /// <summary>
-        /// Konvertiert einen NT Gerätenamen mit Pfad (z. B. "\Device\HardDisk1\Temp\foo.txt") in einen DOS-Pfad.
+        /// This method converts a NT device name and path (like "\Device\HardDisk1\Temp\foo.txt") to a DOS path.
         /// </summary>
-        /// <param name="devicePath">Gerätename und Pfad</param>
-        /// <returns>Den konvertierten Namen oder aber einen leeren String, falls die Konvertierung nicht durchgeführt werden konnte.</returns>
+        /// <param name="devicePath">NT device name and path</param>
+        /// <returns>DOS path of an empty string, if the NT device name has no mapping to a DOS device name and path.</returns>
         public static string ConvertDevicePathToDosPath(string devicePath)
         {
-            EnsureDeviceMap();
+            InitializeDeviceMapIfNeeded();
             int i = devicePath.Length;
             while (i > 0 && (i = devicePath.LastIndexOf('\\', i - 1)) != -1)
             {
@@ -50,9 +50,10 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Stellt sicher, dass das Dictionary mit allen NT Gerätenamen gefüllt ist.
+        /// Initializes the dictionary containg the mappings from NT device names to DOS device names. This initialization
+        /// is done only once per application life time.
         /// </summary>
-        private static void EnsureDeviceMap()
+        private static void InitializeDeviceMapIfNeeded()
         {
             lock (PathHelper.syncObject)
             {
@@ -65,9 +66,9 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Erstellt das Dictionary mit den NT Gerätenamen und den dazugehörigen DOS-Laufweken.
+        /// Creates the dictionary containg the mappings from NT device names to DOS device names.
         /// </summary>
-        /// <returns>Gefülltes Dictionary mit allen Zuodrnungen.</returns>
+        /// <returns>A dictionary containg mappings from NT device names to DOS device names.</returns>
         private static Dictionary<string, string> BuildDeviceMap()
         {
             string[] logicalDrives = Environment.GetLogicalDrives();
@@ -85,10 +86,11 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Normalisiert den NT Gerätenamen.
+        /// Normalizes the NT device name. Currently this normalization just the removed the
+        /// prefix "\Device\LanmanRedirector" from device names staring with this prefix.
         /// </summary>
-        /// <param name="deviceName">Zu normalisierender NT Gerätename.</param>
-        /// <returns>Normalisierter NT Gerätename.</returns>
+        /// <param name="deviceName">NT device name to be normalized.</param>
+        /// <returns>Normalized NT device name.</returns>
         private static string NormalizeDeviceName(string deviceName)
         {
             if (string.Compare(deviceName, 0, NetworkDevicePrefix, 0, NetworkDevicePrefix.Length, StringComparison.InvariantCulture) == 0)

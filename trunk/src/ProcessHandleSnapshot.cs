@@ -6,22 +6,19 @@ namespace MK.Tools.ForceDel
     using System.Diagnostics;
 
     /// <summary>
-    /// Statische Hilfsklasse, die alle File-Handles aller aktiven Prozesse als Dictionary liefert (Schlüssel ist
-    /// die Prozess ID und der Wert ist eine Liste der vom Prozess alliziierten Handles).
+    /// Static helper class that creates a snapshot of all running processes and their currently opened handles.
     /// </summary>
     internal class ProcessHandleSnapshot
     {
         /// <summary>
-        /// Dictionary mit allen Prozessen (Schlüssel) und einer dazugehörigen Liste mit
-        /// Dateihandles (Wert).
+        /// Dictionary holding all processes (key) and a list of handles (value) that the process has currently opened.
         /// </summary>
         private Dictionary<int, List<IntPtr>> snapshot;
 
         /// <summary>
-        /// Fabrikmethode, die alle aktuellen Prozesen und deren Dateihandles als Dictionary liefert (Schlüssel ist
-        /// die Prozess ID und der Wert ist eine Liste der vom Prozess alliziierten Handles).
+        /// Default constructor. When this constructor is invoked a snapshot of all running processes and
+        /// their currently open handles is taken. 
         /// </summary>
-        /// <returns>Dictionary mit allen aktiven Prozessen und deren Dateihandles.</returns>
         public ProcessHandleSnapshot()
         {
             this.snapshot = new Dictionary<int, List<IntPtr>>();
@@ -47,20 +44,20 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Liefert eine Collection mit allen Dateihandles zum übergebenen Prozess.
+        /// This methods returns a collection of all handles that the process had opened when the snapshot has been taken.
         /// </summary>
-        /// <param name="p">Collecion mit Dateihandles</param>
-        /// <returns>Collection mit allen Dateihandles zum übergebenen Prozess.</returns>
+        /// <param name="p">Process which handles shall be returned.</param>
+        /// <returns>Collection of all handles that the process had opened when the snapshot has been taken.</returns>
         public ReadOnlyCollection<IntPtr> GetHandles(Process p)
         {
             return this.GetHandles(p.Id);
         }
 
         /// <summary>
-        /// Liefert eine Collection mit allen Dateihandles zur übergebenden Prozess ID.
+        /// This methods returns a collection of all handles that the process had opened when the snapshot has been taken.
         /// </summary>
-        /// <param name="processId">Collecion mit Dateihandles</param>
-        /// <returns>Collection mit allen Dateihandles zum übergebenen Prozess.</returns>
+        /// <param name="processId">ID of the process which handles shall be returned.</param>
+        /// <returns>Collection of all handles that the process had opened when the snapshot has been taken.</returns>
         public ReadOnlyCollection<IntPtr> GetHandles(int processId)
         {
             List<IntPtr> handleList;

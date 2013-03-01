@@ -7,35 +7,26 @@ namespace MK.Tools.ForceDel
     using System.Reflection;
 
     /// <summary>
-    /// Die Hauptklasse von ForceDel.
+    /// This is the main class of ForceDel.
     /// </summary>
     public static class Program
     {
         /// <summary>
-        /// Die main Methode von ForceDel - dies ist der Einstiegspunkt ins Programm.
+        /// The main method of ForceDel - this is the entry point to the program.
         /// </summary>
-        /// <param name="args">Argumente von der Kommandozeile</param>
+        /// <param name="args">Arguments specified on the command line.</param>
         [STAThread]
         public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyHandler;
 
-            /*
-             * Damit der oben gesetzte Event-Handler greift, muss ForceDel in einer
-             * eigenen Methode gestartet werden.
-             * 
-             * Hintergrund: Der JIT übersetzt immer gesamte Methoden - würde jetzt
-             * eine DLL fehlen, die in der Main() verwendet wird, dann würde bereits
-             * die Übersetzung der Main() fehlschlagen - also lange bevor der Event Handler
-             * gesetzt wird...
-             */
             RealMain(args);
         }
 
         /// <summary>
-        /// PCL-Dumper starten.
+        /// Start processing - delete the files specified on the command line.
         /// </summary>
-        /// <param name="args">Parameter von der Kommandozeile.</param>
+        /// <param name="args">Arguments specified on the command line.</param>
         private static void RealMain(string[] args)
         {
             if (args.Length < 1)
@@ -85,7 +76,7 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Hilfetext ausgeben und mit RC=1 beenden.
+        /// Print the help and exit with return code 1.
         /// </summary>
         private static void ExitMainWithHelp()
         {
@@ -97,15 +88,16 @@ namespace MK.Tools.ForceDel
             Console.Out.WriteLine("  /V   Prints information about the activities of FORCEDEL.");
             Console.Out.WriteLine("  /D   Prints debug messages for problem determination.");
             Console.Out.WriteLine();
-            Console.Out.WriteLine("Of course /Q and /V are mutually exclusive.");
+            Console.Out.WriteLine("Note that /V or /D can not be specified with /Q.");
             Console.Out.WriteLine();
+
             System.Environment.Exit(1);
         }
 
         /// <summary>
-        /// Fehlermeldung ausgeben und mit RC=1 beenden.
+        /// Print an error message and wxit with return code 1.
         /// </summary>
-        /// <param name="msg">Auzugebende Fehlermeldung.</param>
+        /// <param name="msg">Error message to be printed.</param>
         private static void ExitMainWithError(string msg)
         {
             Console.Error.WriteLine(msg);
@@ -113,9 +105,9 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Informationen zu einer Exception ausgeben und mit RC=1 beenden.
+        /// Print exception information and exit with return code 1.
         /// </summary>
-        /// <param name="ex">Auzugebende Exception.</param>
+        /// <param name="ex">Exception to pe printed.</param>
         private static void ExitMainDueToException(Exception ex)
         {
             Console.Error.WriteLine(ex.ToString());
@@ -123,7 +115,7 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Versionsinformationen ausgeben.
+        /// Print version information.
         /// </summary>
         private static void ShowVersionInformation()
         {
@@ -135,12 +127,11 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Dieser Event Handler wird aufgerufen, wenn eine DLL (Assembly) nicht
-        /// geladen bzw. gefunden werden kann.
+        /// This event handler gets called when an assembly (DLL) is missing or can't be loaded.
         /// </summary>
-        /// <param name="sender">Objekt das den Event sendet</param>
-        /// <param name="e">Parameter des Events</param>
-        /// <returns>Diese Methode liefert immer null zurück.</returns>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Contains the event data.</param>
+        /// <returns>This method always returns null.</returns>
         private static Assembly ResolveAssemblyHandler(object sender, ResolveEventArgs e)
         {
             ExitMainWithError("Could not load DLL " + e.Name);

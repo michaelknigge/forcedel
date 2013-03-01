@@ -9,131 +9,131 @@ namespace MK.Tools.ForceDel
     using Microsoft.Win32.SafeHandles;
 
     /// <summary>
-    /// Rückgabewerte der NT-Funktionen wie z. B. NtQueryObject (NT_STATUS).
+    /// Return codes of the NT-Functions, like NtQueryObject.
     /// </summary>
     internal enum NtStatus
     {
         /// <summary>
-        /// Fehlerfreie Verarbeitung.
+        /// The operation completed successfully (STATUS_SUCCESS).
         /// </summary>
-        STATUS_SUCCESS = 0x00000000,
+        Success = 0x00000000,
 
         /// <summary>
-        /// Daten passen nicht in den übergebenen Puffer.
+        /// The data was too large to fit into the specified buffer (STATUS_BUFFER_OVERFLOW).
         /// </summary>
-        STATUS_BUFFER_OVERFLOW = unchecked((int)0x80000005L),
+        BufferOverflow = unchecked((int)0x80000005L),
 
         /// <summary>
-        /// Die angegebene Größe (eines Puffers) ist zu klein, um die angeforderten Daten aufzunehmen.
+        /// The specified information record length does not match the length that is 
+        /// required for the specified information class (STATUS_INFO_LENGTH_MISMATCH).
         /// </summary>
-        STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004L),
+        InfoLengthMismatch = unchecked((int)0xC0000004L),
 
         /// <summary>
-        /// Das übergebene Handle ist ungültig.
+        /// An invalid handle was specified (STATUS_INVALID_HANDLE).
         /// </summary>
-        STATUS_INVALID_HANDLE = unchecked((int)0xC0000008L)
+        InvalidHandle = unchecked((int)0xC0000008L)
     }
 
     /// <summary>
-    /// Mögliche Informationsklassen, die mit der Funktion NtQuerySystemInformation
-    /// angefordert werden können (SYSTEM_INFORMATION_CLASS).
+    /// This enumeration defines information classes for system settings. This type is used with 
+    /// the native functions NtQuerySystemInformation and NtSetSystemInformation (SYSTEM_INFORMATION_CLASS).
     /// </summary>
     internal enum SystemInformationClass
     {
         /// <summary>
-        /// Füllt einen Puffer mit SYSTEM_PROCESS_INFORMATION Strukturen.
+        /// Fills a buffer with a SYSTEM_PROCESS_INFORMATION structure.
         /// </summary>
         SystemProcessInformation = 5,
 
         /// <summary>
-        /// Füllt einen Puffer mit SystemHandleEntry Strukturen
+        /// Fills a buffer with a SYSTEM_HANDLE_ENTRY structure.
         /// </summary>
         SystemHandleInformation = 16
     }
 
     /// <summary>
-    /// Mögliche Informationsklassen, die mit der Funktion NtQueryObject
-    /// angefordert werden können (OBJECT_INFORMATION_CLASS).
+    /// This enumeration type represents the type of information to supply about an object (OBJECT_INFORMATION_CLASS).
     /// </summary>
     internal enum ObjectInformationClass
     {
         /// <summary>
-        /// Liefert den Namen eines Objektes (OBJECT_NAME_INFORMATION).
+        /// A PUBLIC_OBJECT_NAME_INFORMATION structure is supplied.
         /// </summary>
         ObjectNameInformation = 1,
 
         /// <summary>
-        /// Liefert den Typen eines Objektes (OBJECT_TYPE_INFORMATION).
+        /// A PUBLIC_OBJECT_TYPE_INFORMATION structure is supplied.
         /// </summary>
         ObjectTypeInformation = 2
     }
 
     /// <summary>
-    /// Mögliche Rechte, die bei der Funktion OpenProcess angegeben werden können (PROCESS_ACCESS_RIGHTS).
+    /// This enumeration type represents required access rights passed to the native function OpenProcess (PROCESS_ACCESS_RIGHTS).
     /// </summary>
     [Flags]
     internal enum ProcessAccessRights
     {
         /// <summary>
-        /// Privileg zum Duplizieren von Handles (PROCESS_DUP_HANDLE).
+        /// Privilege for duplication a handle (PROCESS_DUP_HANDLE).
         /// </summary>
         ProcessDuplicateHandle = 0x00000040
     }
 
     /// <summary>
-    /// Mögliche Optionen, die bei der Funktion DuplicateHandle angegeben werden können.
+    /// This enumeration type represents the options that can be passed to the native function DuplicateHandle.
     /// </summary>
     [Flags]
     internal enum DuplicateHandleOptions
     {
         /// <summary>
-        /// Schliest das Quell-Handle (DUPLICATE_CLOSE_SOURCE).
+        /// Closes the source handle. This occurs regardless of any error status returned (DUPLICATE_CLOSE_SOURCE).
         /// </summary>
         CloseSource = 0x1,
 
         /// <summary>
-        /// Erzeugt das neue Handle mit den gleichen Zugriffsberechtigungen wie das Quell-Handle (DUPLICATE_SAME_ACCESS).
+        /// The duplicate handle has the same access as the source handle (DUPLICATE_SAME_ACCESS).
         /// </summary>
         SameAccess = 0x2
     }
 
     /// <summary>
-    /// Typ einer Applikation (RM_APP_TYPE).
+    /// Specifies the type of application (RM_APP_TYPE).
     /// </summary>
     internal enum ApplicationType
     {
         /// <summary>
-        /// Alle Anwendungen, die nicht in die unteren Klassifizierungen passen.
+        /// The application cannot be classified as any other type. An application of this type can only be shut down by a forced shutdown.
         /// </summary>
         RmUnknownApp = 0,
 
         /// <summary>
-        /// Anwendung mit einem Top-Level Fenster.
+        /// A Windows application run as a stand-alone process that displays a top-level window.
         /// </summary>
         RmMainWindow = 1,
 
         /// <summary>
-        /// Applikation ohne Top-Level Fenster.
+        /// A Windows application that does not run as a stand-alone process and does not display a top-level window.
         /// </summary>
         RmOtherWindow = 2,
 
         /// <summary>
-        /// Windows Dienst.
+        /// The application is a Windows service.
         /// </summary>
         RmService = 3,
 
         /// <summary>
-        /// Der Windows Explorer.
+        /// The application is Windows Explorer.
         /// </summary>
         RmExplorer = 4,
 
         /// <summary>
-        /// Eine Konsolenapplikation.
+        /// The application is a stand-alone console application.
         /// </summary>
         RmConsole = 5,
 
         /// <summary>
-        /// Im Falle einer Software-Installation ist ein Reboot nötig!
+        /// A system restart is required to complete the installation because a process cannot be shut down.
         /// </summary>
         RmCritical = 1000
     }
@@ -146,32 +146,33 @@ namespace MK.Tools.ForceDel
     internal struct SystemHandleEntry
     {
         /// <summary>
-        /// Prozess ID.
+        /// ID of the process that this handle belongs to.
         /// </summary>
         public int OwnerPid;
 
         /// <summary>
-        /// Typ des Objekts.
+        /// Type of the object (file, directory, pipe, ..). Sadly this value may change
+        /// from one Windows version to another.
         /// </summary>
         public byte ObjectType;
 
         /// <summary>
-        /// Flags (Schalterleiste).
+        /// Some special flags (but they are undocumented).
         /// </summary>
         public byte HandleFlags;
 
         /// <summary>
-        /// Numerischer Wert des Handles.
+        /// Numerical value of the handle.
         /// </summary>
         public short HandleValue;
 
         /// <summary>
-        /// Zeiger auf eine FILE_OBJECT Struktur (im Kernel Space).
+        /// Pointer to a FILE_OBJECT structure (in Kernel Space).
         /// </summary>
         public IntPtr ObjectPointer;
 
         /// <summary>
-        /// Funktion unbekannt.
+        /// Access mask (undocumented).
         /// </summary>
         public int AccessMask;
 
@@ -179,76 +180,86 @@ namespace MK.Tools.ForceDel
         /// Generates a string containing all attributes of the SystemHandleEntry.
         /// </summary>
         /// <returns></returns>
-//        public override string ToString()
-//        {
-//            return "OwnerPid=" + this.OwnerPid + ", ObjectType=" + this.ObjectType + ", HandleFlags=" + this.HandleFlags + ", HandleValue=" + this.HandleValue + ", AccessMask=" + this.AccessMask;
-//        }
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("OwnerPid={0}, ", this.OwnerPid);
+            sb.AppendFormat("OnjectType={0:X02}, ", this.ObjectType);
+            sb.AppendFormat("HandleFlags={0:X02}, ", this.HandleFlags);
+            sb.AppendFormat("HandleValue={0}, ", this.HandleValue);
+            sb.AppendFormat("AccessMask={0:X04}", this.AccessMask);
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
-    /// Eindeutig idetifizierbarer Prozess (RM_UNIQUE_PROCESS).
+    /// Uniquely identifies a process by its PID and the time the process began (RM_UNIQUE_PROCESS).
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     internal struct UniqueProcess
     {
         /// <summary>
-        /// Prozess ID.
+        /// The process identifier (PID)..
         /// </summary>
         public int ProcessId;
 
         /// <summary>
-        /// Startzeit des Prozesses.
+        /// The creation time of the process.
         /// </summary>
         public System.Runtime.InteropServices.ComTypes.FILETIME ProcessStartTime;
     }
 
     /// <summary>
-    /// Informationen zu einem Prozess (RM_PROCESS_INFO).
+    /// Describes an application (RM_PROCESS_INFO).
     /// </summary>
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     internal struct ProcessInfo
     {
         /// <summary>
-        /// Eindeutige Kennung des Prozesses.
+        /// Contains an RM_UNIQUE_PROCESS structure that uniquely identifies the application by its PID and the time the process began.
         /// </summary>
         public UniqueProcess Process;
 
         /// <summary>
-        /// Name der Applikation.
+        /// If the process is a service, this parameter returns the long name for the service. If the process is not a service, 
+        /// this parameter returns the user-friendly name for the application.
         /// </summary>
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255 + 1)]
         public string ApplicationName;
 
         /// <summary>
-        /// Name vom Windows Dienst.
+        /// If the process is a service, this is the short name for the service. This member is not used if the process is not a service.
         /// </summary>
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 63 + 1)]
         public string ServiceShortName;
 
         /// <summary>
-        /// Typ der Anwendung / Prozess.
+        /// Contains an RM_APP_TYPE enumeration value that specifies the type of application.
         /// </summary>
         public ApplicationType ApplicationType;
 
         /// <summary>
-        /// Bitmaske die den aktuellen Status des Prozesses beschreibt.
+        /// Contains a bit mask that describes the current status of the application.
         /// </summary>
         public uint AppStatus;
 
         /// <summary>
-        /// Session ID vom Terminal Server.
+        /// Contains the Terminal Services session ID of the process. If the terminal session of the process 
+        /// cannot be determined, the value of this member is set to -1.
         /// </summary>
         public uint TSSessionId;
 
         /// <summary>
-        /// TRUE wenn die Applikation vomn Restart Manager neu gestartet werden kann.
+        /// TRUE if the application can be restarted by the Restart Manager; otherwise, FALSE.
+        /// This member is always TRUE if the process is a service. 
         /// </summary>
         [MarshalAs(UnmanagedType.Bool)]
         public bool Restartable;
     }
 
     /// <summary>
-    /// Alle von DrudeDel benötigten native Methods sind hier gekapselt deklariert.
+    /// This class contains declarations of all required native methods.
     /// </summary>
     internal static class NativeMethods
     {

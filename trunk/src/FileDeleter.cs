@@ -6,18 +6,19 @@ namespace MK.Tools.ForceDel
     using System.Security;
 
     /// <summary>
-    /// Klasse zum Löschen von Dateien. Die Dateien werden bei Bedarf in anderen Prozessen
-    /// geschlossen, wenn das zum erfolgreichen Löschen der Datei notwendig ist.
+    /// This class (guess what) deletes files. It tries to delete the file using the ordinary Delete() method
+    /// of the File class. If the file can not deletes this way, the class determines which process(es) has the
+    /// file in use and closes the file handle of the file within the determined process(es).
     /// </summary>
     internal sealed class FileDeleter
     {
         /// <summary>
-        /// Alle Prozesse mit allen geöffneten Dateien.
+        /// All processes with all open files.
         /// </summary>
         private ProcessHandleSnapshot snapshot;
 
         /// <summary>
-        /// Konstruktor vom FileDeleter.
+        /// Standard constructor.
         /// </summary>
         public FileDeleter()
         {
@@ -25,10 +26,10 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Löscht die Datei mit dem übergebenen Namen.
+        /// Deletes the file with the given name.
         /// </summary>
-        /// <param name="fileName">Datei die gelöscht werden soll.</param>
-        /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
+        /// <param name="fileName">Name of the file to be deleted.</param>
+        /// <returns>true if and only the file has been successfully deleted.</returns>
         public bool Delete(string fileName)
         {
             try
@@ -66,27 +67,27 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Entfernt das ReadOnly-Attribut der Datei, sofern es vorhanden ist.
+        /// Removed the read-only attribute from the given file (if neccessary).
         /// </summary>
-        /// <param name="absoluteFileName">Absoluter Dateiname der Datei</param>
-        /// <returns>true gdw. das Attribut entfernt worden ist (oder es nicht vorhanden war).</returns>
-        private bool RemoveReadOnlyAttribute(string absoluteFileName)
+        /// <param name="fileName">Name of the file.</param>
+        /// <returns>true if and only if the attribute has been removed.</returns>
+        private bool RemoveReadOnlyAttribute(string fileName)
         {
-            FileAttributes attr = File.GetAttributes(absoluteFileName);
+            FileAttributes attr = File.GetAttributes(fileName);
 
             if ((attr & FileAttributes.ReadOnly) != FileAttributes.ReadOnly)
                 return true;
 
-            Logger.Log(LogLevel.Verbose, "Removing read-only attribute from file " + absoluteFileName);
-            File.SetAttributes(absoluteFileName, attr & ~FileAttributes.ReadOnly);
+            Logger.Log(LogLevel.Verbose, "Removing read-only attribute from file " + fileName);
+            File.SetAttributes(fileName, attr & ~FileAttributes.ReadOnly);
             return true;
         }
 
         /// <summary>
-        /// Versucht die Datei auf "normalem Wege" (mit Standardmitteln) zu löschen.
+        /// Deletes the given file.
         /// </summary>
-        /// <param name="absoluteFileName">Absoluter Dateiname der zu löschenden Datei</param>
-        /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
+        /// <param name="absoluteFileName">Absolute name of the file to be deleted.</param>
+        /// <returns>true if and only if the file has been deleted.</returns>
         private bool DeleteTheFile(string absoluteFileName)
         {
             try
@@ -103,13 +104,12 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Versucht die Datei auf die "harte Tour" zu löschen. Dazu werden die Prozesse ermittelt, die
-        /// die angegebene Datei geöffnet haben - dann wird versucht, die Datei in den Adressräumen der
-        /// Prozesse zu schließen. Ist das erfolgt, wird wieder versucht die Datei mit Standardmitteln
-        /// zu löschen.
+        /// Tries to delete the file "the hard way". At first this method determines which process(es) has the
+        /// file in use and closes the file handle of the file within the determined process(es). If this has
+        /// been done, the file is deleted using File.Delete().
         /// </summary>
-        /// <param name="absoluteFileName">Absoluter Dateiname der zu löschenden Datei</param>
-        /// <returns>true gdw. die Datei gelöscht werden konnte.</returns>
+        /// <param name="absoluteFileName">Absolute name of the file to be deleted.</param>
+        /// <returns>true if and only if the file has been deleted.</returns>
         private bool TryHarderDelete(string absoluteFileName)
         {
             List<int> processIds = UsedFileDetector.GetProcesses(absoluteFileName);
@@ -134,11 +134,11 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Schließt das übergebene Handle im angegebenen Prozess. Dazu wird das Handle duplizert und beim Duplizieren
-        /// das Quelllhandle geschlossen.
+        /// This method closes the given handle in the given process. To archive that, the handle is duplicated using the 
+        /// native method DuplicateHandle - and during the duplication the handle is closed in the remote process.
         /// </summary>
-        /// <param name="processId">ID des Prozesses.</param>
-        /// <param name="handle">Zu schließendes Dateihandle.</param>
+        /// <param name="processId">ID of the process hat has the specified handle opened.</param>
+        /// <param name="handle">Handle to be closed.</param>
         private void CloseHandleInRemoteProcess(int processId, IntPtr handle)
         {
             SafeNativeHandle remoteProcess = NativeMethods.OpenProcess(ProcessAccessRights.ProcessDuplicateHandle, true, processId);
