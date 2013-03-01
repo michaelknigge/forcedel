@@ -10,31 +10,30 @@ namespace MK.Tools.ForceDel
     using Microsoft.Win32.SafeHandles;
 
     /// <summary>
-    /// Hilfsklasse, die auf "unterster Ebene" mit Handles hantiert.
+    /// Static helper class that works with handles at a low level.
     /// </summary>
     internal static class LowLevelHandleHelper
     {
         /// <summary>
-        /// Prüft ob das Handle zu einer Datei gehört.
+        /// Checks if the object handle is a file handle.
         /// </summary>
-        /// <param name="handle">Handle des Objektes</param>
-        /// <param name="processId">Dazugehöriger Prozess</param>
-        /// <returns>true gdw. das Objekt eine Datei beschreibt.</returns>
+        /// <param name="handle">Handle of the object.</param>
+        /// <param name="processId">Process that owns this handle.</param>
+        /// <returns>true if and only the handle is a file handle.</returns>
         public static bool IsFileHandle(IntPtr handle, int processId)
         {
             string type = LowLevelHandleHelper.GetHandleTypeToken(handle, processId);
 
-            Logger.Log(LogLevel.Debug, "Getting filetype: PID=" + processId + " handle=" + handle.ToInt32() + ", type=" + type);
+            Logger.Log(LogLevel.Debug, String.Format("Getting filetype: PID={0}, handle={1}, type={2}", processId, handle.ToInt32(), type));
             return type.Equals("File");
         }
 
         /// <summary>
-        /// Liefert den Namen (z. B. Dateiname) zu einem Handle, den der Prozess
-        /// alloziiert hat.
+        /// Determines the file name for a file handle.
         /// </summary>
-        /// <param name="handle">Handle, dessen Name gelieert werden soll.</param>
-        /// <param name="processId">ID vom Prozess, der das Handle alloziiert hat.</param>
-        /// <returns>Name des Handles (z. B. Dateiname). Wenn der Name nicht festgestellt werden kann wird ein leerer String geliefert.</returns>
+        /// <param name="handle">Handle of the file, which name is to be determined.</param>
+        /// <param name="processId">ID of the owning process.</param>
+        /// <returns>The name of the file, the object handle points to. If the name could not be determined, an empty string is returned.</returns>
         public static string GetFileNameFromHandle(IntPtr handle, int processId)
         {
             Logger.Log(LogLevel.Debug, "Getting filename: PID=" + processId + " handle=" + handle.ToInt32());
@@ -55,11 +54,11 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Liefert den Typen (als String) des Handles
+        /// Returns the type of a handle (as a string).
         /// </summary>
-        /// <param name="handle">Handle des Objektes</param>
-        /// <param name="processId">Dazugehöriger Prozess</param>
-        /// <returns>Typ des Handles als String, z. B. "File".</returns>
+        /// <param name="handle">Handle of the object.</param>
+        /// <param name="processId">Process that owns this handle.</param>
+        /// <returns>Type of the handle, i. e. "File".</returns>
         private static string GetHandleTypeToken(IntPtr handle, int processId)
         {
             IntPtr currentProcess = NativeMethods.GetCurrentProcess();
@@ -92,16 +91,16 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Liefert den Typen (als String) des Handles (im aktuellen Prozess).
+        /// Returns the type of a handle (as a string).
         /// </summary>
-        /// <param name="handle">Handle des Objektes</param>
-        /// <returns>Typ des Handles als String, z. B. "File".</returns>
+        /// <param name="handle">Handle of the object.</param>
+        /// <returns>Type of the handle, i. e. "File".</returns>
         private static string GetHandleTypeToken(IntPtr handle)
         {
             Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#1, ObjectTypeInformation) for handle " + handle.ToString());
             int length;
             NtStatus ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, IntPtr.Zero, 0, out length);
-            if (ret == NtStatus.STATUS_INVALID_HANDLE)
+            if (ret == NtStatus.InvalidHandle)
                 return string.Empty;
 
             IntPtr ptr = IntPtr.Zero;
@@ -118,7 +117,7 @@ namespace MK.Tools.ForceDel
                 }
 
                 Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#2, ObjectTypeInformation) for handle " + handle.ToString());
-                if (NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, ptr, length, out length) == NtStatus.STATUS_SUCCESS)
+                if (NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectTypeInformation, ptr, length, out length) == NtStatus.Success)
                     return Marshal.PtrToStringUni((IntPtr)((int)ptr + 0x60));
             }
             finally
@@ -130,12 +129,12 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Liefert den Namen (z. B. Dateinamen) des übergebenen Handles.
+        /// Determines the file name for a file handle.
         /// </summary>
-        /// <param name="handle">Handle (z. B. Dateihandle)</param>
-        /// <param name="processId">Dazugehöriger Prozess</param>
-        /// <param name="fileName">Ausgabeparemeter für den Dateinamen</param>
-        /// <returns>true gdw. der Name ermittelt werden konnte.</returns>
+        /// <param name="handle">Handle of the file, which name is to be determined.</param>
+        /// <param name="processId">ID of the owning process.</param>
+        /// <param name="fileName">The name of the file, the object handle points to. If the name could not be determined, an empty string.</param>
+        /// <returns>true if and only the file name yould be determined.</returns>
         private static bool GetFileNameFromHandle(IntPtr handle, int processId, out string fileName)
         {
             IntPtr currentProcess = NativeMethods.GetCurrentProcess();
@@ -168,13 +167,13 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Liefert den Dateinamen zu einem Handle. Die Ermittlung des Namens wird dabei in einem
-        /// Thread ausgeführt, da die benutzte Funktion NtQueryObject u. U. blockiert.
+        /// Determines the file name for a file handle. Because the used native function NtQueryObject may
+        /// block on various file types, the function is executed in a thread.
         /// </summary>
-        /// <param name="handle">Handle, dessen Name ermittelt werden soll.</param>
-        /// <param name="fileName">Ausgabeparemeter für den Namen</param>
-        /// <param name="wait">Wartezeit in ms.</param>
-        /// <returns>true gdw. der Name ermittelt werden konnte.</returns>
+        /// <param name="handle">Handle of the file, which name is to be determined.</param>
+        /// <param name="fileName">The name of the file, the object handle points to. If the name could not be determined, an empty string.</param>
+        /// <param name="wait">Time in ms this function waits for the scheduled thread to finish.</param>
+        /// <returns>true if and only the file name yould be determined (the scheduled thread finished within the specified time).</returns>
         private static bool GetFileNameFromHandle(IntPtr handle, out string fileName, int wait)
         {
             FileNameFromHandleState f = new FileNameFromHandleState(handle);
@@ -201,9 +200,10 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Setzt den ermittelten Dateinamen in unserem Hilfsobjekt FileNameFromHandleState.
+        /// Determines the filename for a object handle and stores this file name th
+        /// the helper object FileNameFromHandleState.
         /// </summary>
-        /// <param name="state">Hilfsobject FileNameFromHandleState.</param>
+        /// <param name="state">Helper object FileNameFromHandleState.</param>
         private static void GetFileNameFromHandle(object state)
         {
             FileNameFromHandleState s = (FileNameFromHandleState)state;
@@ -220,11 +220,11 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Ermittelt den Dateinamen zum Handle über die Funktion NtQueryObject.
+        /// Determines the name of a object handle by calling the native function NtQueryObject.
         /// </summary>
-        /// <param name="handle">Handle, dessen Name ermittelt werden soll.</param>
-        /// <param name="fileName">Ausgabeparemeter für den Namen</param>
-        /// <returns>true gdw. der Name ermittelt werden konnte, ansonsten false.</returns>
+        /// <param name="handle">Handle of the file, which name is to be determined.</param>
+        /// <param name="fileName">The name of the file, the object handle points to. If the name could not be determined, an empty string.</param>
+        /// <returns>true if and only the file name yould be determined.</returns>
         private static bool GetFileNameFromHandle(IntPtr handle, out string fileName)
         {
             IntPtr ptr = IntPtr.Zero;
@@ -243,7 +243,7 @@ namespace MK.Tools.ForceDel
 
                 Logger.Log(LogLevel.Debug, "Calling NtQueryObject(#1, ObjectNameInformation) for handle " + handle.ToString());
                 NtStatus ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectNameInformation, ptr, length, out length);
-                if (ret == NtStatus.STATUS_BUFFER_OVERFLOW)
+                if (ret == NtStatus.BufferOverflow)
                 {
                     RuntimeHelpers.PrepareConstrainedRegions();
                     try
@@ -259,7 +259,7 @@ namespace MK.Tools.ForceDel
                     ret = NativeMethods.NtQueryObject(handle, ObjectInformationClass.ObjectNameInformation, ptr, length, out length);
                 }
 
-                if (ret == NtStatus.STATUS_SUCCESS)
+                if (ret == NtStatus.Success)
                 {
                     fileName = Marshal.PtrToStringUni((IntPtr)((int)ptr + 8), (length - 9) / 2);
                     return fileName.Length != 0;
@@ -275,24 +275,26 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Hilfsklasse mit Status der asynchronen Ermittlung der Dateinamen.
+        /// Helper class that is required for determining the name of a object handle
+        /// in an async running thread (this class holds ins handle passed to the thread
+        /// and the file name returned/determined by the thread).
         /// </summary>
         private class FileNameFromHandleState : IDisposable
         {
             /// <summary>
-            /// Ereignisklasse, mit der das erfolgreiche Ermitteln eines Objektnamens signatlisiert wird.
+            /// Notifies one or more waiting threads that an event has occurred.
             /// </summary>
             private ManualResetEvent resetEvent;
 
             /// <summary>
-            /// Hilfsobjekt zum Synchronisieren des Zugriffs aus das ManualResetEvent Objekt.
+            /// Helper object for synchronizing access to the resetEvent.
             /// </summary>
             private object syncObject;
 
             /// <summary>
-            /// Konstruktor, der das Handle auf das gewünschte Objekt entgegen nimmt.
+            /// Constructor that takes the object handle, which name has to be determined.
             /// </summary>
-            /// <param name="handle">Handle auf das gewünschte Objekt</param>
+            /// <param name="handle">Object handle, which name has to be determined.</param>
             public FileNameFromHandleState(IntPtr handle)
             {
                 this.resetEvent = new ManualResetEvent(false);
@@ -301,32 +303,32 @@ namespace MK.Tools.ForceDel
             }
 
             /// <summary>
-            /// Handle, dessen Name ermittelt werden soll.
+            /// Object handle, which name has to be determined.
             /// </summary>
             public IntPtr Handle { get; private set; }
 
             /// <summary>
-            /// Ermittelter (Datei-)Name des Handles.
+            /// Determined file name the object handle points to.
             /// </summary>
             public string FileName { get; set; }
 
             /// <summary>
-            /// Rückgabewert (true wenn der Name ermittelt werden konnte, sonst false).
+            /// Return value (true if and only the file name yould be determined).
             /// </summary>
             public bool RetValue { get; set; }
 
             /// <summary>
-            /// Wartet auf den ManualResetEvent.
+            /// This method waits for the ManualResetEvent to be raised.
             /// </summary>
-            /// <param name="wait">Maximale Wartezeit in ms.</param>
-            /// <returns>true gdw. der Event eingetreten ist.</returns>
+            /// <param name="wait">Wait time in ms.</param>
+            /// <returns>true if and only the event has occured.</returns>
             public bool WaitOne(int wait)
             {
                 return this.resetEvent.WaitOne(wait, false);
             }
 
             /// <summary>
-            /// Signalisiert den Event.
+            /// Raises the event.
             /// </summary>
             public void Set()
             {
@@ -338,7 +340,7 @@ namespace MK.Tools.ForceDel
             }
 
             /// <summary>
-            /// Gibt die verwendeten Ressourcen (ManualResetEvent) frei.
+            /// Disposes this object.
             /// </summary>
             public void Dispose()
             {

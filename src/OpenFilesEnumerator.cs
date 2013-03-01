@@ -9,14 +9,14 @@ namespace MK.Tools.ForceDel
     using System.Text;
 
     /// <summary>
-    /// Hilfsklasse, die über alle geöffneten Dateien des Systems (aller Prozesse) enumeriert.
+    /// Helper class for enumerating all handles of all processes.
     /// </summary>
     internal sealed class OpenFilesEnumerator : IEnumerable<SystemHandleEntry>
     {
         /// <summary>
-        /// Fabrikmethode, die den Enumerator zurückliefert.
+        /// Factory method that returns the enumerator.
         /// </summary>
-        /// <returns>Einen Enumerator über die Handles.</returns>
+        /// <returns>An enumerator over all handles.</returns>
         public IEnumerator<SystemHandleEntry> GetEnumerator()
         {
             NtStatus ret;
@@ -29,15 +29,14 @@ namespace MK.Tools.ForceDel
                 RuntimeHelpers.PrepareConstrainedRegions();
                 try
                 {
+                    // Use a CER (Constrained Execution Region) so our AllocHGlobal()
+                    // even gets executed if a exception is thrown (async) somewhere...
                     RuntimeHelpers.PrepareConstrainedRegions();
                     try
                     {
                     }
                     finally
                     {
-                        // In einem eingeschränkten Ausführungsbereich (CER = Constrained
-                        // Execution Region) wird hier "ptr" auch dann zugewiesen, wenn
-                        // asynchron eine Exception fliegt...
                         ptr = Marshal.AllocHGlobal(length);
                     }
 
@@ -45,14 +44,14 @@ namespace MK.Tools.ForceDel
                     Logger.Log(LogLevel.Debug, "Calling NtQueryObject(SystemHandleInformation)) width a buffersize of " + length);
                     ret = NativeMethods.NtQuerySystemInformation(SystemInformationClass.SystemHandleInformation, ptr, length, out returnLength);
 
-                    // Wenn wir mehr Speicher brauchen, runden wir auf zur nächsten 64 KB Grenze...
-                    if (ret == NtStatus.STATUS_INFO_LENGTH_MISMATCH)
+                    // We need more memory? ok, let's go up to the next 64 KByte boundary...
+                    if (ret == NtStatus.InfoLengthMismatch)
                     {
                         length = (returnLength + 0xffff) & ~0xffff;
                         continue;
                     }
 
-                    if (ret == NtStatus.STATUS_SUCCESS)
+                    if (ret == NtStatus.Success)
                     {
                         int handleCount = IntPtr.Size == 4 ? Marshal.ReadInt32(ptr) : (int)Marshal.ReadInt64(ptr);
                         int offset = IntPtr.Size;
@@ -74,13 +73,13 @@ namespace MK.Tools.ForceDel
                     Marshal.FreeHGlobal(ptr);
                 }
             }
-            while (ret == NtStatus.STATUS_INFO_LENGTH_MISMATCH);
+            while (ret == NtStatus.InfoLengthMismatch);
         }
 
         /// <summary>
-        /// Liefert den Enumerator.
+        /// This method returns the enumerator.
         /// </summary>
-        /// <returns>Den Enumerator</returns>
+        /// <returns>The enumerator.</returns>
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
