@@ -2,6 +2,7 @@ namespace MK.Tools.ForceDel
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Security;
 
@@ -112,14 +113,22 @@ namespace MK.Tools.ForceDel
         /// <returns>true if and only if the file has been deleted.</returns>
         private bool TryHarderDelete(string absoluteFileName)
         {
-            List<int> processIds = UsedFileDetector.GetProcesses(absoluteFileName);
+            // Windows Vista provides a new API which can be used to determine which process
+            // has a file opened. This API is nor available on Windows XP so we have check
+            // all processes on those legacy systems.
+            bool isVistaOrNewer = SystemHelper.IsWindowsVistaOrNewer();
+            List<int> processIds = isVistaOrNewer ? UsedFileDetector.GetProcesses(absoluteFileName) : SystemHelper.GetProcesses();
+
             foreach (int pid in processIds)
             {
+                Logger.Log(LogLevel.Debug, "Checking all file handles of process " + pid);
+
                 foreach (IntPtr handle in this.snapshot.GetHandles(pid))
                 {
                     Logger.Log(LogLevel.Debug, string.Empty);
 
                     string fileName = LowLevelHandleHelper.GetFileNameFromHandle(handle, pid);
+
                     if (absoluteFileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
                     {
                         Logger.Log(LogLevel.Verbose, "File " + absoluteFileName + " is in use by process with PID " + pid);

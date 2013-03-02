@@ -179,7 +179,7 @@ namespace MK.Tools.ForceDel
         /// <summary>
         /// Generates a string containing all attributes of the SystemHandleEntry.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A string containg all elementy of this struct (friendly formatted).</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
