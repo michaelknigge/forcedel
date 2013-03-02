@@ -40,6 +40,13 @@
       issues this function in a thread - if the thread is not able to get the filename within a specified time, ForceDel skips
       this handle and continues with the next one. So some file handles are skipped/ignored - but ForceDel will not block forever.
       <br /><br />
+      On Windows Vista and newer there is a function named
+      <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa364953%28v=vs.85%29.aspx">
+      GetFileInformationByHandleEx</a> that can determine the filename for a
+      handle, but tests showed that this function is somehow limited and
+      can not determine the file names in all cases. So even on these systems
+      ForceDel uses the function <a href="http://msdn.microsoft.com/en-us/library/bb432383%28v=vs.85%29.aspx">NtQueryObject</a>. 
+      <br /><br />
       When ForceDel got the right handle (a handle for the file to be deleted), ForceDel uses a special feature of the Windows API. The function
       <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms724251%28v=vs.85%29.aspx">DuplicateHandle</a> is used to make a copy of the
       file handle - but in a way that the file handle is not just copied, it is also closed in the process
