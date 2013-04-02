@@ -82,7 +82,7 @@ namespace MK.Tools.ForceDel
         {
             ShowVersionInformation();
 
-            Console.Error.WriteLine("Usage: FORCEDEL [/Q] [/V] [Filename(s)]");
+            Console.Error.WriteLine("Usage: FORCEDEL [/Q] [/V] [/D] [Filename(s)]");
             Console.Out.WriteLine();
             Console.Out.WriteLine("  /Q   Will suppress any output with the exception of error messages.");
             Console.Out.WriteLine("  /V   Prints information about the activities of FORCEDEL.");

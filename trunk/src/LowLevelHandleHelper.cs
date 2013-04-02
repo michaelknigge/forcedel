@@ -176,46 +176,24 @@ namespace MK.Tools.ForceDel
         /// <returns>true if and only the file name yould be determined (the scheduled thread finished within the specified time).</returns>
         private static bool GetFileNameFromHandle(IntPtr handle, out string fileName, int wait)
         {
-            FileNameFromHandleState f = new FileNameFromHandleState(handle);
-            try
+            FileNameFromHandleWorker worker = new FileNameFromHandleWorker(handle);
+            Thread thread = new Thread(worker.DoWork);
+
+            thread.Start();
+
+            if (thread.Join(wait))
             {
-                Logger.Log(LogLevel.Debug, "Queue request, state " + f.ToString());
-                ThreadPool.QueueUserWorkItem(new WaitCallback(GetFileNameFromHandle), f);
-                if (f.WaitOne(wait))
-                {
-                    fileName = f.FileName;
-                    Logger.Log(LogLevel.Debug, "Request " + f.ToString() + " returnded file name " + fileName);
-                    return f.RetValue;
-                }
-                else
-                {
-                    fileName = string.Empty;
-                    return false;
-                }
+                fileName = worker.FileName;
+                return true;
             }
-            finally
+            else
             {
-                f.Dispose();
-            }
-        }
+                Logger.Log(LogLevel.Debug, "Name for handle " + handle.ToString() + " could not be determined within " + wait + " ms - aborting thread...");
+                thread.Abort();
+                Logger.Log(LogLevel.Debug, "Thread successfully aborted.");
 
-        /// <summary>
-        /// Determines the filename for a object handle and stores this file name th
-        /// the helper object FileNameFromHandleState.
-        /// </summary>
-        /// <param name="state">Helper object FileNameFromHandleState.</param>
-        private static void GetFileNameFromHandle(object state)
-        {
-            FileNameFromHandleState s = (FileNameFromHandleState)state;
-
-            string fileName;
-            bool retValue = GetFileNameFromHandle(s.Handle, out fileName);
-
-            if (retValue)
-            {
-                s.RetValue = retValue;
-                s.FileName = fileName;
-                s.Set();
+                fileName = string.Empty;
+                return false;
             }
         }
 
@@ -275,31 +253,19 @@ namespace MK.Tools.ForceDel
         }
 
         /// <summary>
-        /// Helper class that is required for determining the name of a object handle
-        /// in an async running thread (this class holds ins handle passed to the thread
-        /// and the file name returned/determined by the thread).
+        /// Helper class for determining the name of a object handle in an async running thread.
         /// </summary>
-        private class FileNameFromHandleState : IDisposable
+        private class FileNameFromHandleWorker
         {
-            /// <summary>
-            /// Notifies one or more waiting threads that an event has occurred.
-            /// </summary>
-            private ManualResetEvent resetEvent;
-
-            /// <summary>
-            /// Helper object for synchronizing access to the resetEvent.
-            /// </summary>
-            private object syncObject;
-
             /// <summary>
             /// Constructor that takes the object handle, which name has to be determined.
             /// </summary>
             /// <param name="handle">Object handle, which name has to be determined.</param>
-            public FileNameFromHandleState(IntPtr handle)
+            public FileNameFromHandleWorker(IntPtr handle)
             {
-                this.resetEvent = new ManualResetEvent(false);
-                this.syncObject = new object();
                 this.Handle = handle;
+                this.FileName = string.Empty;
+                this.RetValue = false;
             }
 
             /// <summary>
@@ -318,40 +284,15 @@ namespace MK.Tools.ForceDel
             public bool RetValue { get; set; }
 
             /// <summary>
-            /// This method waits for the ManualResetEvent to be raised.
+            /// Determines the name of a object handle.
             /// </summary>
-            /// <param name="wait">Wait time in ms.</param>
-            /// <returns>true if and only the event has occured.</returns>
-            public bool WaitOne(int wait)
+            public void DoWork()
             {
-                return this.resetEvent.WaitOne(wait, false);
-            }
+                string fileName;
+                bool retValue = GetFileNameFromHandle(this.Handle, out fileName);
 
-            /// <summary>
-            /// Raises the event.
-            /// </summary>
-            public void Set()
-            {
-                lock (this.syncObject)
-                {
-                    if (this.resetEvent != null)
-                        this.resetEvent.Set();
-                }
-            }
-
-            /// <summary>
-            /// Disposes this object.
-            /// </summary>
-            public void Dispose()
-            {
-                lock (this.syncObject)
-                {
-                    if (this.resetEvent != null)
-                    {
-                        this.resetEvent.Close();
-                        this.resetEvent = null;
-                    }
-                }
+                this.FileName = fileName;
+                this.RetValue = retValue;
             }
         }
     }
