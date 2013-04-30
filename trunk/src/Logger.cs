@@ -59,7 +59,7 @@
         {
             if (level == LogLevel.Exception)
             {
-                Console.Out.WriteLine(msg);
+                Console.Error.WriteLine(msg);
                 return;
             }
 
@@ -72,6 +72,14 @@
                 Console.Out.WriteLine(msg);
             else if (level == LogLevel.Debug && Debug == true)
                 Console.Out.WriteLine(msg);
+        }
+
+        /// <summary>
+        /// Flushes all buffered log messages.
+        /// </summary>
+        public static void Flush()
+        {
+            Console.Out.Flush();
         }
     }
 }

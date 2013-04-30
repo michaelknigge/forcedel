@@ -71,6 +71,10 @@ namespace MK.Tools.ForceDel
                         returnCode = 1;
             }
 
+            Logger.Log(LogLevel.Debug, string.Empty);
+            Logger.Log(LogLevel.Debug, "Done, exiting with RC=" + returnCode);
+            Logger.Flush();
+
             Console.Out.WriteLine();
             System.Environment.Exit(returnCode);
         }
