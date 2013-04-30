@@ -189,8 +189,11 @@ namespace MK.Tools.ForceDel
             else
             {
                 Logger.Log(LogLevel.Debug, "Name for handle " + handle.ToString() + " could not be determined within " + wait + " ms - aborting thread...");
-                thread.Abort();
-                Logger.Log(LogLevel.Debug, "Thread successfully aborted.");
+
+                if (worker.Abort())
+                    Logger.Log(LogLevel.Debug, "Thread successfully aborted.");
+                else
+                    Logger.Log(LogLevel.Debug, "Thread could not be aborted.");
 
                 fileName = string.Empty;
                 return false;
@@ -258,6 +261,11 @@ namespace MK.Tools.ForceDel
         private class FileNameFromHandleWorker
         {
             /// <summary>
+            /// This field holds the handle of the native OS thread.
+            /// </summary>
+            private IntPtr nativeThreadId;
+
+            /// <summary>
             /// Constructor that takes the object handle, which name has to be determined.
             /// </summary>
             /// <param name="handle">Object handle, which name has to be determined.</param>
@@ -288,11 +296,34 @@ namespace MK.Tools.ForceDel
             /// </summary>
             public void DoWork()
             {
+                // Notify the CLR that this thread may not be re-scheduled to an other
+                // OS native Thread because we need the native Thread ID of this thread
+                // so we can terminate the thread if it hangs (this may happen at least under
+                // Windows XP when invoking the native method NtQueryObject...).
+                Thread.BeginThreadAffinity();
+
+                this.nativeThreadId = NativeMethods.GetCurrentThread();
+                Logger.Log(LogLevel.Debug, "Getting the filename for handle " + this.Handle.ToInt32() + " in thread " + this.nativeThreadId);
+
                 string fileName;
                 bool retValue = GetFileNameFromHandle(this.Handle, out fileName);
 
                 this.FileName = fileName;
                 this.RetValue = retValue;
+            }
+
+            /// <summary>
+            /// This method terminates the thread.
+            /// </summary>
+            /// <remarks>This methods uses native code to terminate the thread bacause the .NET method Thread.Abort() will not terminate the thread
+            /// if it hangs. Furthermore, the target thread's initial stack is not freed under Windows Server 2003 and Windows XP, 
+            /// causing a resource leak. On the other hand, leaving the hanging threads unterminated causes a hang of the application
+            /// on application exit. So we have no choice - we have to terminate the thread the hard and ugly way...</remarks>
+            /// <returns>true if and only the thread has been terminated.</returns>
+            public bool Abort()
+            {
+                Logger.Log(LogLevel.Debug, "Terminating thread " + this.nativeThreadId);
+                return NativeMethods.TerminateThread(this.nativeThreadId, 0);
             }
         }
     }

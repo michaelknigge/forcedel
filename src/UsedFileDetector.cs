@@ -25,7 +25,7 @@ namespace MK.Tools.ForceDel
         /// Returns a list that contains all processes (pid) that have the 
         /// specified file in use.
         /// </summary>
-        /// <param name="absoluteFileName">File name</param>
+        /// <param name="absoluteFileName">Absolute file name.</param>
         /// <returns>List with processes (pid).</returns>
         public static List<int> GetProcesses(string absoluteFileName)
         {

@@ -314,6 +314,15 @@ namespace MK.Tools.ForceDel
             [Out] StringBuilder lpTargetPath,
             [In] int ucchMax);
 
+        [DllImport("kernel32.dll")]
+        internal static extern uint GetCurrentThreadId();
+
+        [DllImport("kernel32.dll")]
+        internal static extern IntPtr GetCurrentThread();
+
+        [DllImport("kernel32.dll")]
+        internal static extern bool TerminateThread(IntPtr hThread, uint dwExitCode);
+
         [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
         internal static extern int RmStartSession(
             out uint pSessionHandle, 
