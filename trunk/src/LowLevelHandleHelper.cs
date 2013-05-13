@@ -263,7 +263,7 @@ namespace MK.Tools.ForceDel
             /// <summary>
             /// This field holds the handle of the native OS thread.
             /// </summary>
-            private IntPtr nativeThreadId;
+            private SafeNativeHandle nativeThreadId;
 
             /// <summary>
             /// Constructor that takes the object handle, which name has to be determined.
@@ -274,6 +274,7 @@ namespace MK.Tools.ForceDel
                 this.Handle = handle;
                 this.FileName = string.Empty;
                 this.RetValue = false;
+                this.nativeThreadId = null;
             }
 
             /// <summary>
@@ -302,8 +303,13 @@ namespace MK.Tools.ForceDel
                 // Windows XP when invoking the native method NtQueryObject...).
                 Thread.BeginThreadAffinity();
 
-                this.nativeThreadId = NativeMethods.GetCurrentThread();
-                Logger.Log(LogLevel.Debug, "Getting the filename for handle " + this.Handle.ToInt32() + " in thread " + this.nativeThreadId);
+                IntPtr processHandle = NativeMethods.GetCurrentProcess();
+                IntPtr threadHandle = NativeMethods.GetCurrentThread();
+                
+                if (NativeMethods.DuplicateHandle(processHandle, threadHandle, processHandle, out this.nativeThreadId, 0, false, DuplicateHandleOptions.SameAccess))
+                    Logger.Log(LogLevel.Debug, "Getting the filename for handle " + this.Handle.ToInt32() + " in thread " + this.nativeThreadId.DangerousGetHandle());
+                else
+                    Logger.Log(LogLevel.Debug, "Getting the filename for handle " + this.Handle.ToInt32() + " in unknown thread");
 
                 string fileName;
                 bool retValue = GetFileNameFromHandle(this.Handle, out fileName);
@@ -322,8 +328,16 @@ namespace MK.Tools.ForceDel
             /// <returns>true if and only the thread has been terminated.</returns>
             public bool Abort()
             {
-                Logger.Log(LogLevel.Debug, "Terminating thread " + this.nativeThreadId);
-                return NativeMethods.TerminateThread(this.nativeThreadId, 0);
+                if (this.nativeThreadId == null || this.nativeThreadId.IsInvalid)
+                {
+                    Logger.Log(LogLevel.Debug, "Can not terminate thread because the thread handle is unknown or invalid");
+                    return false;
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Debug, "Terminating thread " + this.nativeThreadId.DangerousGetHandle());
+                    return NativeMethods.TerminateThread(this.nativeThreadId.DangerousGetHandle(), 0);
+                }
             }
         }
     }
