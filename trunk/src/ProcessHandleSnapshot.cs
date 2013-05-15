@@ -33,7 +33,7 @@ namespace MK.Tools.ForceDel
 
                 if (LowLevelHandleHelper.IsFileHandle(handle, processId))
                 {
-                    if (this.IgnoreSystemHandleEntry(entry))
+                    if (!this.IgnoreSystemHandleEntry(entry))
                     {
                         if (!this.snapshot.ContainsKey(processId))
                             this.snapshot.Add(processId, new List<IntPtr>());
