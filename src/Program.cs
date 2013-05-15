@@ -32,8 +32,6 @@ namespace MK.Tools.ForceDel
             if (args.Length < 1)
                 ExitMainWithHelp();
 
-            FileDeleter deleter = new FileDeleter();
-
             bool verbose = false;
             bool quiet = false;
             bool debug = false;
@@ -62,6 +60,7 @@ namespace MK.Tools.ForceDel
             Logger.Debug = debug;
             Logger.Quiet = quiet;
             Logger.Verbose = verbose;
+            FileDeleter deleter = new FileDeleter();
 
             int returnCode = 0;
             foreach (string fileName in args)

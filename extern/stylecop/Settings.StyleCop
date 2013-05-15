@@ -1,0 +1,122 @@
+<StyleCopSettings Version="105">
+  <GlobalSettings>
+    <StringProperty Name="MergeSettingsFiles">NoMerge</StringProperty>
+    <BooleanProperty Name="WriteCache">False</BooleanProperty>
+    <StringProperty Name="Culture">de-DE</StringProperty>
+  </GlobalSettings>
+  <Parsers>
+    <Parser ParserId="StyleCop.CSharp.CsParser">
+      <ParserSettings>
+        <CollectionProperty Name="GeneratedFileFilters">
+          <Value>\.g\.cs$</Value>
+          <Value>\.generated\.cs$</Value>
+          <Value>\.Designer\.cs$</Value>
+          <Value>\.g\.i\.cs$</Value>
+        </CollectionProperty>
+        <BooleanProperty Name="AnalyzeDesignerFiles">False</BooleanProperty>
+      </ParserSettings>
+    </Parser>
+  </Parsers>
+  <Analyzers>
+    <Analyzer AnalyzerId="StyleCop.CSharp.NamingRules">
+      <AnalyzerSettings>
+        <CollectionProperty Name="Hungarian">
+          <Value>am</Value>
+          <Value>as</Value>
+          <Value>do</Value>
+          <Value>id</Value>
+          <Value>if</Value>
+          <Value>in</Value>
+          <Value>is</Value>
+          <Value>my</Value>
+          <Value>no</Value>
+          <Value>on</Value>
+          <Value>to</Value>
+          <Value>ui</Value>
+        </CollectionProperty>
+      </AnalyzerSettings>
+    </Analyzer>
+    <Analyzer AnalyzerId="StyleCop.CSharp.DocumentationRules">
+      <Rules>
+        <Rule Name="PropertySummaryDocumentationMustMatchAccessors">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ConstructorSummaryDocumentationMustBeginWithStandardText">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="DestructorSummaryDocumentationMustBeginWithStandardText">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="FileMustHaveHeader">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ElementParametersMustBeDocumented">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="DocumentationTextMustBeginWithACapitalLetter">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">True</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="DocumentationTextMustEndWithAPeriod">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">True</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="DocumentationTextMustContainWhitespace">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ElementReturnValueMustBeDocumented">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="ElementDocumentationMustBeSpelledCorrectly">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
+      <AnalyzerSettings>
+        <BooleanProperty Name="IgnorePrivates">True</BooleanProperty>
+      </AnalyzerSettings>
+    </Analyzer>
+    <Analyzer AnalyzerId="StyleCop.CSharp.ReadabilityRules">
+      <Rules>
+        <Rule Name="SplitParametersMustStartOnLineAfterDeclaration">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
+      <AnalyzerSettings />
+    </Analyzer>
+    <Analyzer AnalyzerId="StyleCop.CSharp.LayoutRules">
+      <Rules>
+        <Rule Name="CurlyBracketsForMultiLineStatementsMustNotShareLine">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+        <Rule Name="CurlyBracketsMustNotBeOmitted">
+          <RuleSettings>
+            <BooleanProperty Name="Enabled">False</BooleanProperty>
+          </RuleSettings>
+        </Rule>
+      </Rules>
+      <AnalyzerSettings />
+    </Analyzer>
+  </Analyzers>
+</StyleCopSettings>

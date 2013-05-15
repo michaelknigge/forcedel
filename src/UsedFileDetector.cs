@@ -12,12 +12,12 @@ namespace MK.Tools.ForceDel
     internal static class UsedFileDetector
     {
         /// <summary>
-        /// "No error" error code.
+        /// Error code "No error".
         /// </summary>
         private const int NoError = 0;
 
         /// <summary>
-        /// "Buffer too small" error code.
+        /// Error code "Buffer too small".
         /// </summary>
         private const int ErrorMoreData = 234;
 

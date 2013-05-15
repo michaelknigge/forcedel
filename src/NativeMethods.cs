@@ -184,7 +184,7 @@ namespace MK.Tools.ForceDel
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("OwnerPid={0}, ", this.OwnerPid);
-            sb.AppendFormat("OnjectType={0:X02}, ", this.ObjectType);
+            sb.AppendFormat("ObjectType={0:X02}, ", this.ObjectType);
             sb.AppendFormat("HandleFlags={0:X02}, ", this.HandleFlags);
             sb.AppendFormat("HandleValue={0}, ", this.HandleValue);
             sb.AppendFormat("AccessMask={0:X04}", this.AccessMask);

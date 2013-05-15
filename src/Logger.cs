@@ -4,7 +4,7 @@
     using System.Text;
 
     /// <summary>
-    /// Log-Level of the message to be logged
+    /// Log-Level of the message to be logged.
     /// </summary>
     public enum LogLevel
     {

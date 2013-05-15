@@ -33,7 +33,7 @@ namespace MK.Tools.ForceDel
         /// <summary>
         /// This method converts a NT device name and path (like "\Device\HardDisk1\Temp\foo.txt") to a DOS path.
         /// </summary>
-        /// <param name="devicePath">NT device name and path</param>
+        /// <param name="devicePath">NT device name and path.</param>
         /// <returns>DOS path of an empty string, if the NT device name has no mapping to a DOS device name and path.</returns>
         public static string ConvertDevicePathToDosPath(string devicePath)
         {

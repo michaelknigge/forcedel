@@ -14,7 +14,7 @@
         /// Determines is the running operating system is Windows Vista or even
         /// a newer version of Microsoft Windows (like Windows 7 or Windows 8).
         /// </summary>
-        /// <returns>trie if and only if the running operating system is Windows Vista or newer.</returns>
+        /// <returns>true if and only if the running operating system is Windows Vista or newer.</returns>
         public static bool IsWindowsVistaOrNewer()
         {
             OperatingSystem os = Environment.OSVersion;
