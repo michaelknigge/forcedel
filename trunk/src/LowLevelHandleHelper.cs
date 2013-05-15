@@ -24,7 +24,7 @@ namespace MK.Tools.ForceDel
         {
             string type = LowLevelHandleHelper.GetHandleTypeToken(handle, processId);
 
-            Logger.Log(LogLevel.Debug, String.Format("Getting filetype: PID={0}, handle={1}, type={2}", processId, handle.ToInt32(), type));
+            Logger.Log(LogLevel.Debug, string.Format("Getting filetype: PID={0}, handle={1}, type={2}", processId, handle.ToInt32(), type));
             return type.Equals("File");
         }
 
@@ -322,7 +322,7 @@ namespace MK.Tools.ForceDel
             /// This method terminates the thread.
             /// </summary>
             /// <remarks>This methods uses native code to terminate the thread bacause the .NET method Thread.Abort() will not terminate the thread
-            /// if it hangs. Furthermore, the target thread's initial stack is not freed under Windows Server 2003 and Windows XP, 
+            /// if it hangs. When terminating a thread on Windows Server 2003 and Windows XP, the target thread's initial stack is not freed
             /// causing a resource leak. On the other hand, leaving the hanging threads unterminated causes a hang of the application
             /// on application exit. So we have no choice - we have to terminate the thread the hard and ugly way...</remarks>
             /// <returns>true if and only the thread has been terminated.</returns>
