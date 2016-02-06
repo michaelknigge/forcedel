@@ -22,3 +22,6 @@ Over 500 lines of code just to delete a file...
 
 # Development
 ForceDel is currently not under active development. Do not expect further releases or new features. But pull requests from the community are welcome.
+
+# Licence
+ForceDel has been dedicated to the public domain. But if you did some enhancements or bug fixes to ForceDel please provide me with the changes (pull requests) so the community can participate from your changes. This is how the community works...
