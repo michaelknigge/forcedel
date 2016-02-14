@@ -5,7 +5,7 @@ ForceDel works on systems running Windows XP (or newer) and needs the .NET Frame
 
 But be warned. There is no official way to delete a file that is in use by another process. ForceDel uses tricks to archive that and some applications may be offended if a file handle becomes unexpectedly invalid
 
-# How does is work
+# How does it work
 Well, it is quite easy: ForceDel determines witch processes are holding locks on the file and then closes the file so it can be deleted. Easy, eh? 
 
 NO, IT IS NOT! 
