@@ -3,7 +3,7 @@ ForceDel is a useful utility that enables you to delete a file that is currently
 
 ForceDel works on systems running Windows XP (or newer) and needs the .NET Framework in Version 3.5. ForceDel itself comes as a single execuatble - no external DLLs are required. 
 
-But be warned. There is no official way to delete a file that is in use by another process. ForceDel uses tricks to archive that and some applications may be offended if a file handle becomes unexpectedly invalid
+But be warned. There is no official way to delete a file that is in use by another process. ForceDel uses tricks to archive that and some applications may be offended if a file handle becomes unexpectedly invalid.
 
 # How does it work
 Well, it is quite easy: ForceDel determines witch processes are holding locks on the file and then closes the file so it can be deleted. Easy, eh? 
